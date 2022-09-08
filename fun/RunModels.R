@@ -189,6 +189,7 @@ fPCheck <- function(res, dat, lambda_sim = NA, max_lambda) {
       lower <- apply(X_sim, 2, function(x) quantile(x, 0.1))
       upper <- apply(X_sim, 2, function(x) quantile(x, 0.9))
       medianv  <- apply(X_sim, 2, function(x) quantile(x, 0.5))
+      
       pred_post <- data.frame(age = dat$age_mean_f,
                               plower = lower,
                               pupper = upper,
@@ -198,13 +199,31 @@ fPCheck <- function(res, dat, lambda_sim = NA, max_lambda) {
                               pobslo = dat$prev_obs_lower,
                               pobsup  = dat$prev_obs_upper)
       
+      # browser()
+      
       prev_expanded <- get_prev_expanded(foi, dat)
+      
+      dat$cut_ages <- cut(as.numeric(dat$age_mean_f), seq(0,80, by = 5), include.lowest = T)
+      xx <- dat %>% group_by(age_class = as.character(cut_ages)) %>% summarise(total = sum(total), counts = sum(counts))
+      xx$midAge <- as.numeric(substr(xx$age_class, 2, 3)) + 2
+      conf <- data.frame(Hmisc::binconf(xx$counts, xx$total,method="exact"))
+      xx  <- cbind(xx, conf) %>%
+        rename (prev_obs = PointEst,
+                prev_obs_lower = Lower,
+                prev_obs_upper = Upper
+        )
+      
+      
       prev_expanded$survey <- dat$survey[1]
-      prev_plot2 <- ggplot(prev_expanded) +
+      prev_plot2 <- 
+        ggplot(prev_expanded) +
         geom_ribbon(aes( x= age, ymin = plower, ymax = pupper), fill = 'pink') +
-        geom_point(aes(age, pobs, size = sample_size), fill = 'white', colour = 'black') +
-        geom_errorbar(aes(age, ymin = pobslo, ymax = pobsup), width = 0.1) +
-        geom_line(aes(x = age, y = medianv), colour = 'darkred') +
+        # geom_point(aes(age, pobs, size = sample_size), fill = 'white', colour = 'black') +
+        # geom_errorbar(aes(age, ymin = pobslo, ymax = pobsup), width = 0.1) +
+        # geom_line(aes(x = age, y = medianv), colour = 'darkred') +
+        geom_point(data = xx, aes(x=midAge, y =prev_obs, size = total), fill = 'white', colour = 'black') +
+        geom_errorbar(data = xx, aes(x=midAge, ymin = prev_obs_lower, ymax = prev_obs_upper), width = 0.1) +
+        geom_line(data = xx, aes(x = midAge, y = prev_obs), colour = 'darkred') +
         theme_bw(25) +
         coord_cartesian(xlim = c(0, 60), ylim = c(0,1)) +
         theme(legend.position = 'none') +

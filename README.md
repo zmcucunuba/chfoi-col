@@ -1,2 +1,3 @@
 # chfoi-col
-Chagas Force-of-Infection for Colombia
+
+Reproducible code for Chagas Force-of-Infection in Colombia.

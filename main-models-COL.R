@@ -42,7 +42,7 @@ dat0 <- dat0 %>% filter(country == "COL")
 (datasets <- as.character(unique(dat0$survey)))
 (ld <- length(datasets))
 
-my_dir <- 'COL-2021'
+my_dir <- 'COL-2021B'
 dir_results(my_dir) # from file XXX 
 
 saveRDS(dat0, paste0('res/', my_dir, "/data-", my_dir,  '.RDS'))
@@ -56,7 +56,8 @@ saveRDS(summary, paste0('res/', my_dir, "/summary-", my_dir,  '.RDS'))
 
 
 
-
+datasets <-  "COL-002-01"
+  
 for (i in datasets) {
   
   print(paste('======================= reading', i))
@@ -74,6 +75,6 @@ for (i in datasets) {
   
 }
 
-dd <- readRDS("res/COL-2021/posterior/COL-001-01.RDS")
-dd$model_comp
+# dd <- readRDS("res/COL-2021/posterior/COL-001-01.RDS")
+# dd$model_comp
 

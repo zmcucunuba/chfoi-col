@@ -170,7 +170,7 @@ dir_results <- function(name_dir)
   
   my_dir <- paste0('res/', name_dir)
   dir_plots <- paste0(my_dir, '/plots')
-  dir_comp   <- paste0(my_dir, '/comp')
+  # dir_comp   <- paste0(my_dir, '/comp')
   dir_posterior  <- paste0(my_dir, '/posterior')
   
   if (dir.exists(my_dir) == FALSE) {
@@ -182,9 +182,9 @@ dir_results <- function(name_dir)
   } 
   
   
-  if(dir.exists(dir_comp) == FALSE) {
-    dir.create(dir_comp)
-  } 
+  # if(dir.exists(dir_comp) == FALSE) {
+  #   dir.create(dir_comp)
+  # } 
   
   if(dir.exists(dir_posterior) == FALSE) {
     dir.create(dir_posterior)
