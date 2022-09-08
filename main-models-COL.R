@@ -9,6 +9,7 @@ library(cowplot)
 library(grid)
 library(gridExtra)
 library(Hmisc)
+library(dplyr)
 
 source('fun/Utility.R')
 source('fun/Fitting.R')
@@ -31,18 +32,17 @@ dat0 <- readRDS("data/data-COL-2021.RDS")
 
 
 
-my_dir <- paste0('COL', Sys.time())
+my_dir <- paste0('COL-', Sys.time())
 dir_results(my_dir) # from file XXX 
 
-saveRDS(dat0, paste0('res/', my_dir, "/data-", my_dir,  '.RDS'))
+saveRDS(dat0, paste0('res/', my_dir, "/data-COL.RDS"))
 
-summary <-
-  dat0 %>% group_by(survey, tsur, country, test, setting, loc_type, 
+summary_rep <-
+  dat0 %>% dplyr::group_by(survey, tsur, country, test, setting, loc_type, 
                     ADM1, ADM2, ADM3, lat_dec, long_dec, source_type,
-                    year_init, year_end, n_ages, sample_size) %>%  summarise()
+                    year_init, year_end, n_ages, sample_size) %>%  dplyr::summarise()
 
-saveRDS(summary, paste0('res/', my_dir, "/summary-", my_dir,  '.RDS'))
-
+saveRDS(summary_rep, paste0('res/', my_dir, "/summary-COL.RDS"))
 
 
 
@@ -55,13 +55,9 @@ for (i in datasets) {
                 dat0      = dat0,
                 n_iters   = 3000,
                 MConstant = MConstant,
-                MContinuous   = MContinuousNormal,
-                
-  )
+                MContinuous   = MContinuousNormal
+                )
   
   
 }
-
-# dd <- readRDS("res/COL-2021/posterior/COL-001-01.RDS")
-# dd$model_comp
 

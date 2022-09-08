@@ -42,26 +42,26 @@ RunSaveModels <- function(my_dir,
 
   
   #  ---- Plotting
-  PPC1    <- fPCheck(mod_0, dat, lambda_sim, max_lambda)
-  PPC3    <- fPCheck(mod_1, dat, lambda_sim, max_lambda)
+  PPC0    <- fPCheck(mod_0, dat, lambda_sim, max_lambda)
+  PPC1    <- fPCheck(mod_1, dat, lambda_sim, max_lambda)
  
 
-  mod_0$prev_expanded <- PPC1$prev_expanded
-  mod_1$prev_expanded <- PPC3$prev_expanded
+  mod_0$prev_expanded <- PPC0$prev_expanded
+  mod_1$prev_expanded <- PPC1$prev_expanded
  
   
   
-  dif_m3 <- loo::compare (mod_0$loo_fit, mod_1$loo_fit)
+  dif_m <- loo::compare (mod_0$loo_fit, mod_1$loo_fit)
 
 
   
-  PPC1$lll$diff <- 0; PPC1$lll$diff_se <- 1; 
-  PPC3$lll$diff <- dif_m3[1];   PPC3$lll$diff_se <- dif_m3[2]; 
+  PPC0$lll$diff <- 0; PPC0$lll$diff_se <- 1; 
+  PPC1$lll$diff <- dif_m[1];   PPC1$lll$diff_se <- dif_m[2]; 
 
   
   # Compare and save summary posterior of the best model
-  model_comparison <- data.frame(rbind(PPC1$lll,
-                                       PPC3$lll
+  model_comparison <- data.frame(rbind(PPC0$lll,
+                                       PPC1$lll
   ))
   
   
@@ -74,9 +74,9 @@ RunSaveModels <- function(my_dir,
   mod_comp_plot <- get_model_comparison_plot(res_comp)
   
   dev.off()
-  png(name_plot, width = 250 * 8, height = 250 * 8)
-  grid.arrange(PPC1$plots, 
-               PPC3$plots,
+  png(name_plot, width = 200 * 7, height = 250 * 8)
+  grid.arrange(PPC0$plots, 
+               PPC1$plots,
                mod_comp_plot,
                nrow = 1)
   dev.off()
@@ -94,7 +94,9 @@ RunSaveModels <- function(my_dir,
                      time_taken = time_taken,
                      mod_0 = mod_0, 
                      mod_1 = mod_1,
-                     model_comp = model_comp)
+                     model_comp = model_comp,
+                     PPC0 = PPC0,
+                     PPC1 = PPC1)
   
   
   
@@ -115,7 +117,7 @@ plot_info_table <- function(info){
   )
   p <- ggplot(dato, aes(x=1, y=y)) + 
     scale_y_continuous(limits=c(0, NROW(info) +1), breaks=NULL) +
-    scale_x_continuous(breaks=NULL) + 
+    # scale_x_continuous(breaks=NULL) + 
     theme_void() +
     geom_text(aes(label=text), size = 10, fontface = 'bold') 
   
@@ -186,9 +188,10 @@ fPCheck <- function(res, dat, lambda_sim = NA, max_lambda) {
       prev_expanded$survey <- dat$survey[1]
       
       if (dat$age_max[1] - dat$age_min[1] <3) {
-        dat$cut_ages <- cut(as.numeric(dat$age_mean_f), seq(0,80, by = 10), include.lowest = T)
+        ## dat$cut_ages <- cut(as.numeric(dat$age_mean_f), seq(0,80, by = 10), include.lowest = TRUE)
+        dat$cut_ages <- cut(as.numeric(dat$age_mean_f), seq(0,80, by = 5), include.lowest = TRUE)
         xx <- dat %>% group_by(age_class = as.character(cut_ages)) %>% summarise(total = sum(total), counts = sum(counts))
-        xx$midAge <- as.numeric(substr(xx$age_class, 2, 3)) + 5
+        xx$midAge <- as.numeric(substr(xx$age_class, 2, 3)) + 2
         conf <- data.frame(Hmisc::binconf(xx$counts, xx$total,method="exact"))
         xx  <- cbind(xx, conf) %>%rename (age = midAge, pobs = PointEst, sample_size = total,
                                           pobslo = Lower,pobsup = Upper)
@@ -196,20 +199,19 @@ fPCheck <- function(res, dat, lambda_sim = NA, max_lambda) {
       } else {xx <- prev_expanded}
 
 
-      
       prev_plot2 <- 
         ggplot(prev_expanded) +
-        geom_ribbon(aes( x= age, ymin = plower, ymax = pupper), fill = 'pink') +
-        geom_point(data = xx, aes(age, pobs, size = sample_size), fill = 'white', colour = 'black') +
+        geom_ribbon(aes( x= age, ymin = plower, ymax = pupper), fill = '#c994c7') +
+        geom_line(aes( x= age, y = medianv), colour = '#7a0177') +
         geom_errorbar(data = xx, aes(age, ymin = pobslo, ymax = pobsup), width = 0.1) +
-        geom_line(data = xx, aes(x = age, y = pobs), colour = 'darkred') +
+        geom_point(data = xx, aes(age, pobs, size = sample_size * 4), fill = '#7a0177', colour = 'black', shape = 21) +
         theme_bw(25) +
         coord_cartesian(xlim = c(0, 60), ylim = c(0,1)) +
         theme(legend.position = 'none') +
-        ylab ('Sero-positivity') +
+        ylab ('Sero-positivity') + xlab("Age")
         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-              panel.background = element_blank(), axis.line = element_line(colour = "black")) +
-        scale_x_continuous(labels=scaleFUN)
+              panel.background = element_blank(), axis.line = element_line(colour = "black")) #+
+        # scale_x_continuous(labels=scaleFUN)
       
       
       
@@ -238,15 +240,17 @@ fPCheck <- function(res, dat, lambda_sim = NA, max_lambda) {
       foi_dat$lower[1] <- NA
       foi_dat$upper[1] <- NA
       
-      lambda_plot <- ggplot(foi_dat) +
-        geom_ribbon(aes( x= year, ymin = lower, ymax = upper), fill = '#2ca25f', alpha = 0.5) +
-        geom_line(aes(x = year, y = medianv), colour = 'darkgreen', size = 1.5) +
+
+      lambda_plot <- 
+        ggplot(foi_dat) +
+        geom_ribbon(aes( x= year, ymin = lower, ymax = upper), fill = '#41b6c4', alpha = 0.5) +
+        geom_line(aes(x = year, y = medianv), colour = '#253494', size = 3) +
         theme_bw(25) +
         coord_cartesian(ylim = c(0, max_lambda)) +
         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
               panel.background = element_blank(), axis.line = element_line(colour = "black")) +
-        scale_x_continuous(labels=scaleFUN) +
-        ylab ('FOI') 
+        # scale_x_continuous(labels=scaleFUN) +
+        ylab ('Force-of-Infection') + xlab ("Year")
       
       
       if (!is.na(lambda_sim)) {
@@ -274,7 +278,7 @@ fPCheck <- function(res, dat, lambda_sim = NA, max_lambda) {
         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
               panel.background = element_blank(), axis.line = element_line(colour = "black")) +
         scale_x_continuous(labels=scaleFUN) +
-        ylab ('R^ hat') 
+        ylab ('Convergence (R^)') 
       
       if (any(rhats > 1.1 ) == TRUE) { 
         lll$converged = 'No' 
@@ -346,8 +350,8 @@ get_model_comparison_plot <- function(res_comp) {
   emptyp <- ggplot(data = data.frame()) +
     geom_point() +
     xlim(0,1) + ylim (0,1) + theme_void() +
-    annotate('text',  x = .5, y = .6, label = best_model, size = 17) +
-    annotate('text',  x = .5, y = .55, label = '(best model)', size = 15) 
+    annotate('text',  x = .5, y = .6, label = best_model, size = 14) +
+    annotate('text',  x = .5, y = .55, label = '(best model)', size = 13) 
   
   
   infot <- filter(model_comp, converged == 'Yes') %>% select(model, diff, diff_se, pvalue, best) %>%
