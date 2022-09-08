@@ -4,19 +4,10 @@ RunSaveModels <- function(my_dir,
                           n_iters,
                           n_warmup,
                           MConstant,
-                          MTimeVarying)
+                          MContinuous)
 {
 
-  # my_dir    = my_dir
-  # suv       = "COL-035-59"
-  # dat0      = dat0
-  # n_iters   = 1500
-  # n_warmup = 400
-  # MConstant = MConstant
-  # MTimeVarying = MNormal
-  
-  # browser()
-  
+
   t0 <- Sys.time()
   my_dir0 <- paste0('res/', my_dir)
 
@@ -26,20 +17,13 @@ RunSaveModels <- function(my_dir,
     mutate(birth_year = tsur - age_mean_f)
   
   
-  # fFitModel <- function(model, dat, m_name, 
-  #                       n_iters = 3000, 
-  #                       n_warmup = 1000,
-  #                       n_thin = 2, 
-  #                       delta = 0.90, 
-  #                       mtreed = 10, 
-  #                       Decades = 0){
-  
+
   mod_0   <- fFitModel(model= MConstant, dat,
                       m_name = 'Constant', n_iters = n_iters) #, n_warmup = n_warmup);   
   print(paste0(suv, ' finished ------ ConstantFOI'))
 
-  mod_1   <- fFitModel(model= MTimeVarying, dat,
-                          m_name ='MNormal', n_iters = n_iters) #, n_warmup = n_warmup);   
+  mod_1   <- fFitModel(model= MContinuous, dat,
+                          m_name ='ContinuousNormal', n_iters = n_iters) #, n_warmup = n_warmup);   
   print(paste0(suv,     ' finished ------ MNormal'))
   
   
@@ -49,7 +33,6 @@ RunSaveModels <- function(my_dir,
 
   name_plot  <- paste0(my_dir0, '/plots/', suv, '.png')
   name_posterior  <- paste0(my_dir0, '/posterior/',suv, '.RDS')
-  # name_comp  <- paste0(my_dir0, '/comp/', suv, '.csv')
 
 
   foi_mod <- rstan::extract(mod_1$fit, 'foi', inc_warmup = FALSE)[[1]]
@@ -84,7 +67,6 @@ RunSaveModels <- function(my_dir,
   
   res_comp <- compare_and_save_best_model( survey = suv, 
                                            model_comparison = model_comparison, 
-                                           # name_comp, 
                                            name_posterior, 
                                            mod_0, mod_1)
   
@@ -199,31 +181,28 @@ fPCheck <- function(res, dat, lambda_sim = NA, max_lambda) {
                               pobslo = dat$prev_obs_lower,
                               pobsup  = dat$prev_obs_upper)
       
-      # browser()
-      
+
       prev_expanded <- get_prev_expanded(foi, dat)
-      
-      dat$cut_ages <- cut(as.numeric(dat$age_mean_f), seq(0,80, by = 5), include.lowest = T)
-      xx <- dat %>% group_by(age_class = as.character(cut_ages)) %>% summarise(total = sum(total), counts = sum(counts))
-      xx$midAge <- as.numeric(substr(xx$age_class, 2, 3)) + 2
-      conf <- data.frame(Hmisc::binconf(xx$counts, xx$total,method="exact"))
-      xx  <- cbind(xx, conf) %>%
-        rename (prev_obs = PointEst,
-                prev_obs_lower = Lower,
-                prev_obs_upper = Upper
-        )
-      
-      
       prev_expanded$survey <- dat$survey[1]
+      
+      if (dat$age_max[1] - dat$age_min[1] <3) {
+        dat$cut_ages <- cut(as.numeric(dat$age_mean_f), seq(0,80, by = 10), include.lowest = T)
+        xx <- dat %>% group_by(age_class = as.character(cut_ages)) %>% summarise(total = sum(total), counts = sum(counts))
+        xx$midAge <- as.numeric(substr(xx$age_class, 2, 3)) + 5
+        conf <- data.frame(Hmisc::binconf(xx$counts, xx$total,method="exact"))
+        xx  <- cbind(xx, conf) %>%rename (age = midAge, pobs = PointEst, sample_size = total,
+                                          pobslo = Lower,pobsup = Upper)
+        
+      } else {xx <- prev_expanded}
+
+
+      
       prev_plot2 <- 
         ggplot(prev_expanded) +
         geom_ribbon(aes( x= age, ymin = plower, ymax = pupper), fill = 'pink') +
-        # geom_point(aes(age, pobs, size = sample_size), fill = 'white', colour = 'black') +
-        # geom_errorbar(aes(age, ymin = pobslo, ymax = pobsup), width = 0.1) +
-        # geom_line(aes(x = age, y = medianv), colour = 'darkred') +
-        geom_point(data = xx, aes(x=midAge, y =prev_obs, size = total), fill = 'white', colour = 'black') +
-        geom_errorbar(data = xx, aes(x=midAge, ymin = prev_obs_lower, ymax = prev_obs_upper), width = 0.1) +
-        geom_line(data = xx, aes(x = midAge, y = prev_obs), colour = 'darkred') +
+        geom_point(data = xx, aes(age, pobs, size = sample_size), fill = 'white', colour = 'black') +
+        geom_errorbar(data = xx, aes(age, ymin = pobslo, ymax = pobsup), width = 0.1) +
+        geom_line(data = xx, aes(x = age, y = pobs), colour = 'darkred') +
         theme_bw(25) +
         coord_cartesian(xlim = c(0, 60), ylim = c(0,1)) +
         theme(legend.position = 'none') +
