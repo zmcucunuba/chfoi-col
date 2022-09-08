@@ -3,7 +3,7 @@
 
 fFitModel <- function(model, dat, m_name, 
                       n_iters = 3000, 
-                      n_warmup = 1000,
+                      # n_warmup = 1000,
                       n_thin = 2, 
                       delta = 0.90, 
                       mtreed = 10, 
@@ -13,7 +13,7 @@ fFitModel <- function(model, dat, m_name,
   # delta = 0.92
   # mtreed = 12
   
-  # browser()
+  n_warmup = 1000
 
   
   yexpo <- make_yexpo(dat)

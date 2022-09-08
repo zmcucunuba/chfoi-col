@@ -2,7 +2,7 @@
 
 compare_and_save_best_model <- function (survey, 
                                          model_comparison, 
-                                         name_comp, name_best,
+                                         name_comp, name_posterior,
                                          res1, res3)
 {
   
@@ -85,7 +85,7 @@ compare_and_save_best_model <- function (survey,
   # --- save_best_model
   extract_and_save(res_file_1, res_file_2, 
                    best_model_1, best_model_2,
-                   name_best, 
+                   name_posterior, 
                    survey, RealYexpo)
   
 

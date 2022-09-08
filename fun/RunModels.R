@@ -15,7 +15,7 @@ RunSaveModels <- function(my_dir,
   # MConstant_BI = MConstant
   # MNormal_simple = MNormal
   
-  browser()
+  # browser()
   
   t0 <- Sys.time()
   my_dir0 <- paste0('res/', my_dir)
@@ -25,14 +25,21 @@ RunSaveModels <- function(my_dir,
   dat <- filter(dat0, survey == suv) %>% arrange(age_mean_f) %>%
     mutate(birth_year = tsur - age_mean_f)
   
-
   
-  res1   <- fFitModel(MConstant_BI, dat,
-                      m_name = 'Constant', n_iters = n_iters, n_warmup = n_warmup);   
+  # fFitModel <- function(model, dat, m_name, 
+  #                       n_iters = 3000, 
+  #                       n_warmup = 1000,
+  #                       n_thin = 2, 
+  #                       delta = 0.90, 
+  #                       mtreed = 10, 
+  #                       Decades = 0){
+  
+  res1   <- fFitModel(model= MConstant_BI, dat,
+                      m_name = 'Constant', n_iters = n_iters) #, n_warmup = n_warmup);   
   print(paste0(suv, ' finished ------ ConstantFOI'))
 
-  res3   <- fFitModel(MNormal_simple, dat,
-                          m_name ='MNormal', n_iters = n_iters, n_warmup = n_warmup);   
+  res3   <- fFitModel(model= MNormal_simple, dat,
+                          m_name ='MNormal', n_iters = n_iters) #, n_warmup = n_warmup);   
   print(paste0(suv,     ' finished ------ MNormal'))
   
   
@@ -77,7 +84,7 @@ RunSaveModels <- function(my_dir,
   
   res_comp <- compare_and_save_best_model( survey = suv, 
                                            model_comparison = model_comparison, 
-                                           name_comp, name_best, 
+                                           name_comp, name_posterior, 
                                            res1, res3)
   
   model_comp    <- res_comp$model_comp
@@ -108,7 +115,7 @@ RunSaveModels <- function(my_dir,
   
   
   
-  saveRDS(res_survey, name_file)
+  saveRDS(res_survey, name_posterior)
   
   
 }

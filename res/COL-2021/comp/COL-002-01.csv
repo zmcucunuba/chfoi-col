@@ -1,0 +1,3 @@
+"","model","dataset","c","tsur","test","antibody","n_sample","n_agec","n_iter","elpd","se","converged","diff","diff_se","pvalue","better","best"
+"1","MNormal","COL-002-01","COL",2010,"ELISA IFI","IgG",280,31,2200,-33.41,3.76,"Yes",0.282388165055784,0.672739105184836,0.337338,"Yes",1
+"2","Constant","COL-002-01","COL",2010,"ELISA IFI","IgG",280,31,2200,-33.69,4.3,"Yes",0,1,0,"-",2
