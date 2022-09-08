@@ -2,8 +2,9 @@
 
 compare_and_save_best_model <- function (survey, 
                                          model_comparison, 
-                                         name_comp, name_posterior,
-                                         res1, res3)
+                                         # name_comp, 
+                                         name_posterior,
+                                         mod_0, mod_1)
 {
   
 
@@ -39,26 +40,26 @@ compare_and_save_best_model <- function (survey,
   model_comp$pvalue <- round(model_comp$pvalue, 6)
   
 
-  write.csv(model_comp, name_comp)
+  # write.csv(model_comp, name_comp)
 
 
   # --------------- Best model
   best_model_data1 <- filter(model_comp, best ==1) # Here I choose the maximun difference rather than the lowest p value
   best_model_data2 <- filter(model_comp, best ==2) # Here I choose the maximun difference rather than the lowest p value
 
-  RealYexpo  <-  res1$RealYexpo
+  RealYexpo  <-  mod_0$RealYexpo
   best_model_1 <- as.character(best_model_data1$model)
   best_model_2 <- as.character(best_model_data2$model)
   
 
-  if(best_model_1 == res1$model) {
-    res_file_1 <- res1
+  if(best_model_1 == mod_0$model) {
+    res_file_1 <- mod_0
   }
   
 
   
-  if(best_model_1 ==  res3$model) {
-    res_file_1 <- res3
+  if(best_model_1 ==  mod_1$model) {
+    res_file_1 <- mod_1
   }
   
   
@@ -66,15 +67,15 @@ compare_and_save_best_model <- function (survey,
   
 
   # ------- Best 2
-  if(best_model_2  == res1$model) {
-    res_file_2 <- res1
+  if(best_model_2  == mod_0$model) {
+    res_file_2 <- mod_0
   }
   
   
   
   
-  if(best_model_2 ==  res3$model) {
-    res_file_2 <- res3
+  if(best_model_2 ==  mod_1$model) {
+    res_file_2 <- mod_1
   }
   
   
@@ -111,20 +112,20 @@ extract_and_save <- function(res_file_1, res_file_2,
 {
   
 
-  foi1 <- rstan::extract(res_file_1$fit, 'foi', inc_warmup = FALSE)[[1]]
-  foi2 <- rstan::extract(res_file_2$fit, 'foi', inc_warmup = FALSE)[[1]]
+  foi_0 <- rstan::extract(res_file_1$fit, 'foi', inc_warmup = FALSE)[[1]]
+  foi_1 <- rstan::extract(res_file_2$fit, 'foi', inc_warmup = FALSE)[[1]]
 
  
   foi_cent_est1 <- data.frame(year  = RealYexpo,
-                              lower = apply(foi1, 2, function(x) quantile(x, 0.1)),
-                              upper = apply(foi1, 2, function(x) quantile(x, 0.9)),
-                              median = apply(foi1, 2, function(x) quantile(x, 0.5))) %>%
+                              lower = apply(foi_0, 2, function(x) quantile(x, 0.1)),
+                              upper = apply(foi_0, 2, function(x) quantile(x, 0.9)),
+                              median = apply(foi_0, 2, function(x) quantile(x, 0.5))) %>%
     mutate(best= 'best1', name_model = best_model_1)
   
   foi_cent_est2 <- data.frame(year  = RealYexpo,
-                              lower = apply(foi2, 2, function(x) quantile(x, 0.1)),
-                              upper = apply(foi2, 2, function(x) quantile(x, 0.9)),
-                              median = apply(foi2, 2, function(x) quantile(x, 0.5))) %>%
+                              lower = apply(foi_1, 2, function(x) quantile(x, 0.1)),
+                              upper = apply(foi_1, 2, function(x) quantile(x, 0.9)),
+                              median = apply(foi_1, 2, function(x) quantile(x, 0.5))) %>%
     mutate(best= 'best2', name_model = best_model_2)
   
   
@@ -132,10 +133,10 @@ extract_and_save <- function(res_file_1, res_file_2,
   foi_cent_est <- rbind(foi_cent_est1, foi_cent_est2)
   
 
-  foi1_post_1000s <- dplyr::sample_n(as.data.frame(foi1), size = 1000) %>% mutate(best = 'best1', name_model = best_model_1)
-  foi2_post_1000s <- dplyr::sample_n(as.data.frame(foi2), size = 1000) %>% mutate(best = 'best2', name_model = best_model_2)
+  foi_0_post_1000s <- dplyr::sample_n(as.data.frame(foi_0), size = 1000) %>% mutate(best = 'best1', name_model = best_model_1)
+  foi_1_post_1000s <- dplyr::sample_n(as.data.frame(foi_1), size = 1000) %>% mutate(best = 'best2', name_model = best_model_2)
 
-  foi_post_1000s <- rbind(foi1_post_1000s, foi2_post_1000s)
+  foi_post_1000s <- rbind(foi_0_post_1000s, foi_1_post_1000s)
  
   colnames(foi_post_1000s)[1: length(RealYexpo)] <- RealYexpo
   

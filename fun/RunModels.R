@@ -3,8 +3,8 @@ RunSaveModels <- function(my_dir,
                           dat0,
                           n_iters,
                           n_warmup,
-                          MConstant_BI,
-                          MNormal_simple)
+                          MConstant,
+                          MTimeVarying)
 {
 
   # my_dir    = my_dir
@@ -12,8 +12,8 @@ RunSaveModels <- function(my_dir,
   # dat0      = dat0
   # n_iters   = 1500
   # n_warmup = 400
-  # MConstant_BI = MConstant
-  # MNormal_simple = MNormal
+  # MConstant = MConstant
+  # MTimeVarying = MNormal
   
   # browser()
   
@@ -34,11 +34,11 @@ RunSaveModels <- function(my_dir,
   #                       mtreed = 10, 
   #                       Decades = 0){
   
-  res1   <- fFitModel(model= MConstant_BI, dat,
+  mod_0   <- fFitModel(model= MConstant, dat,
                       m_name = 'Constant', n_iters = n_iters) #, n_warmup = n_warmup);   
   print(paste0(suv, ' finished ------ ConstantFOI'))
 
-  res3   <- fFitModel(model= MNormal_simple, dat,
+  mod_1   <- fFitModel(model= MTimeVarying, dat,
                           m_name ='MNormal', n_iters = n_iters) #, n_warmup = n_warmup);   
   print(paste0(suv,     ' finished ------ MNormal'))
   
@@ -49,26 +49,26 @@ RunSaveModels <- function(my_dir,
 
   name_plot  <- paste0(my_dir0, '/plots/', suv, '.png')
   name_posterior  <- paste0(my_dir0, '/posterior/',suv, '.RDS')
-  name_comp  <- paste0(my_dir0, '/comp/', suv, '.csv')
+  # name_comp  <- paste0(my_dir0, '/comp/', suv, '.csv')
 
 
-  foi_mod <- rstan::extract(res3$fit, 'foi', inc_warmup = FALSE)[[1]]
+  foi_mod <- rstan::extract(mod_1$fit, 'foi', inc_warmup = FALSE)[[1]]
   max_lambda <-  (as.numeric(quantile(foi_mod, 0.95))) * 1.3
   lambda_sim <- NA
   
 
   
   #  ---- Plotting
-  PPC1    <- fPCheck(res1, dat, lambda_sim, max_lambda)
-  PPC3    <- fPCheck(res3, dat, lambda_sim, max_lambda)
+  PPC1    <- fPCheck(mod_0, dat, lambda_sim, max_lambda)
+  PPC3    <- fPCheck(mod_1, dat, lambda_sim, max_lambda)
  
 
-  res1$prev_expanded <- PPC1$prev_expanded
-  res3$prev_expanded <- PPC3$prev_expanded
+  mod_0$prev_expanded <- PPC1$prev_expanded
+  mod_1$prev_expanded <- PPC3$prev_expanded
  
   
   
-  dif_m3 <- loo::compare (res1$loo_fit, res3$loo_fit)
+  dif_m3 <- loo::compare (mod_0$loo_fit, mod_1$loo_fit)
 
 
   
@@ -84,8 +84,9 @@ RunSaveModels <- function(my_dir,
   
   res_comp <- compare_and_save_best_model( survey = suv, 
                                            model_comparison = model_comparison, 
-                                           name_comp, name_posterior, 
-                                           res1, res3)
+                                           # name_comp, 
+                                           name_posterior, 
+                                           mod_0, mod_1)
   
   model_comp    <- res_comp$model_comp
   mod_comp_plot <- get_model_comparison_plot(res_comp)
@@ -109,8 +110,8 @@ RunSaveModels <- function(my_dir,
   
   res_survey <- list(dat = dat,
                      time_taken = time_taken,
-                     res1 = res1, 
-                     res3 = res3,
+                     mod_0 = mod_0, 
+                     mod_1 = mod_1,
                      model_comp = model_comp)
   
   

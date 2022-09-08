@@ -66,8 +66,8 @@ for (i in datasets) {
                 dat0      = dat0,
                 n_iters   = 2200,
                 # n_warmup = 300,
-                MConstant_BI = MConstant,
-                MNormal_simple = MNormal,
+                MConstant = MConstant,
+                MTimeVarying   = MNormal,
                 
   )
   

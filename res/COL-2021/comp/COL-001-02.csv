@@ -1,3 +1,0 @@
-"","model","dataset","c","tsur","test","antibody","n_sample","n_agec","n_iter","elpd","se","converged","diff","diff_se","pvalue","better","best"
-"1","MNormal","COL-001-02","COL",1998,"ELISA .","IgG",356,8,2200,-16.49,2.57,"Yes",0.580455129835772,0.586748612230738,0.161271,"Yes",1
-"2","Constant","COL-001-02","COL",1998,"ELISA .","IgG",356,8,2200,-17.07,2.57,"Yes",0,1,0,"-",2
